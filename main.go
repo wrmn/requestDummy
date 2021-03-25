@@ -40,15 +40,19 @@ func main() {
 	rand.Seed(time.Now().UnixNano())
 	i := 0
 	for i < 10 {
-		wg.Add(1)
+		wg.Add(3)
 
 		go func(wg *sync.WaitGroup, num int) {
-			nice := rand.Intn(3000)
-			time.Sleep(time.Duration(nice) * time.Millisecond)
-			data := generateDummy(strconv.Itoa(nice))
-			fmt.Printf("wait %dms for msg no %d \n", nice, num)
-			request(data)
-			wg.Done()
+			j := 0
+			for j < 3 {
+				nice := rand.Intn(100)
+				time.Sleep(time.Duration(nice) * time.Millisecond)
+				data := generateDummy(strconv.Itoa(nice))
+				est := j*10 + num
+				fmt.Printf("wait %dms for msg no %d \n", nice, est)
+				go request(data, est, nice, wg)
+				j++
+			}
 		}(&wg, i)
 		i++
 	}
@@ -80,10 +84,11 @@ func generateDummy(num string) rintisRequest {
 		AccountTo:            "1234567890123456789",
 		TokenData:            "1234567890123456789012345678901234567890",
 	}
+	fmt.Println("data " + num + " generated")
 	return data
 }
 
-func request(num interface{}) {
+func request(num interface{}, head int, time int, wg *sync.WaitGroup) {
 	client := &http.Client{}
 	bodyReq, _ := json.Marshal(num)
 	req, err := http.NewRequest("POST", "http://localhost:6010/epay/rintis", bytes.NewBuffer(bodyReq))
@@ -100,5 +105,6 @@ func request(num interface{}) {
 	defer resp.Body.Close()
 
 	body, _ := ioutil.ReadAll(resp.Body)
-	log.Printf("%s \n", body)
+	log.Printf("response for %d with %d \n %s \n", head, time, body)
+	wg.Done()
 }
