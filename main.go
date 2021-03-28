@@ -45,7 +45,7 @@ func main() {
 		go func(wg *sync.WaitGroup, num int) {
 			j := 0
 			for j < 3 {
-				nice := rand.Intn(100)
+				nice := rand.Intn(1000)
 				time.Sleep(time.Duration(nice) * time.Millisecond)
 				data := generateDummy(strconv.Itoa(nice))
 				est := j*10 + num
